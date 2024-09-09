@@ -1,32 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import '../styles/UserTable.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, setFilter } from '../store/usersSlice';
 import { RootState, AppDispatch } from '../store';
 import { Loader } from './Loader';
-
-type FilterParameter = 'name' | 'username' | 'email' | 'phone';
+import { UserItem } from './UserItem';
 
 const UserTable: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { filteredUsers, loading, error } = useSelector((state: RootState) => state.users);
-
-  const [filterText, setFilterText] = useState('');
-  const [filterParameter, setFilterParameter] = useState<FilterParameter>('name');
+  const { filteredUsers, loading, error, filters } = useSelector((state: RootState) => state.users);
 
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilterText(e.target.value);
-    dispatch(setFilter({ parameter: filterParameter, value: e.target.value }));
-  };
-
-  const handleParameterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedParameter = e.target.value as FilterParameter;
-    setFilterParameter(selectedParameter);
-    dispatch(setFilter({ parameter: selectedParameter, value: filterText }));
+  const handleFilterChange = (field: keyof typeof filters, value: string) => {
+    dispatch(setFilter({ field, value }));
   };
 
   return (
@@ -34,26 +23,36 @@ const UserTable: React.FC = () => {
       {loading && <Loader />}
       {error && <p>Error: {error}</p>}
 
-      <div className="user-filter">
-        <select
-          className="user-filter__select"
-          value={filterParameter}
-          onChange={handleParameterChange}
-        >
-          <option value="name">Name</option>
-          <option value="username">Username</option>
-          <option value="email">Email</option>
-          <option value="phone">Phone</option>
-        </select>
-
+      <div className="user-filters">
         <input
-          className="user-filter__input"
+          className="user-filters__input"
           type="text"
-          placeholder={`Filter by ${filterParameter}`}
-          value={filterText}
-          onChange={handleFilterChange}
+          placeholder="Filter by name"
+          value={filters.name}
+          onChange={(e) => handleFilterChange('name', e.target.value)}
         />
-      </div>
+        <input
+          className="user-filters__input"
+          type="text"
+          placeholder="Filter by username"
+          value={filters.username}
+          onChange={(e) => handleFilterChange('username', e.target.value)}
+        />
+        <input
+          className="user-filters__input"
+          type="text"
+          placeholder="Filter by email"
+          value={filters.email}
+          onChange={(e) => handleFilterChange('email', e.target.value)}
+        />
+        <input
+          className="user-filters__input"
+          type="text"
+          placeholder="Filter by phone"
+          value={filters.phone}
+          onChange={(e) => handleFilterChange('phone', e.target.value)}
+        />
+      </div> 
 
       <table className="user-table">
         <thead className="user-table__header">
@@ -66,12 +65,13 @@ const UserTable: React.FC = () => {
         </thead>
         <tbody className="user-table__body">
           {filteredUsers.map((user) => (
-            <tr key={user.id} className="user-table__body-row">
-              <td className="user-table__body-cell">{user.name}</td>
-              <td className="user-table__body-cell">{user.username}</td>
-              <td className="user-table__body-cell">{user.email}</td>
-              <td className="user-table__body-cell">{user.phone}</td>
-            </tr>
+            <UserItem
+              key={user.id}
+              name={user.name}
+              username={user.username}
+              email={user.email}
+              phone={user.phone}
+            />
           ))}
         </tbody>
       </table>

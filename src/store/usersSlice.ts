@@ -1,13 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-
-export interface User {
-  id: number;
-  name: string;
-  username: string;
-  email: string;
-  phone: string;
-}
+import { User } from '../types/user';
 
 interface UsersState {
   users: User[];
@@ -44,19 +37,17 @@ const usersSlice = createSlice({
   name: 'users',
   initialState,
   reducers: {
-    setFilter(
-      state,
-      action: PayloadAction<{ parameter: keyof UsersState['filters']; value: string }>
-    ) {
-      const { parameter, value } = action.payload;
+    setFilter(state, action: PayloadAction<{ field: keyof UsersState['filters']; value: string }>) {
+      state.filters[action.payload.field] = action.payload.value;
 
-      if (parameter in state.filters) {
-        state.filters[parameter] = value;
-
-        state.filteredUsers = state.users.filter((user) =>
-          user[parameter as keyof Omit<User, "id">].toLowerCase().includes(value.trim().toLowerCase())
+      state.filteredUsers = state.users.filter((user) => {
+        return (
+          user.name.toLowerCase().includes(state.filters.name.trim().toLowerCase()) &&
+          user.username.toLowerCase().includes(state.filters.username.trim().toLowerCase()) &&
+          user.email.toLowerCase().includes(state.filters.email.trim().toLowerCase()) &&
+          user.phone.toLowerCase().includes(state.filters.phone.trim().toLowerCase())
         );
-      }
+      });
     },
   },
   extraReducers: (builder) => {
